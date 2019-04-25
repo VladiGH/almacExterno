@@ -124,7 +124,7 @@ class MainActivity : AppCompatActivity() {
         val root = android.os.Environment.getExternalStorageDirectory()
         Log.d("ROOT","\nExternal file system root: $root")
 
-        val dir = File(root.absolutePath + "/Download")
+        val dir = File("sdcard" + "/Download")
         dir.mkdirs()
         val file = File(dir, "myData.txt")
 
@@ -144,7 +144,7 @@ class MainActivity : AppCompatActivity() {
             e.printStackTrace()
         }
 
-        Log.d("Se escribió en: ", "File written to $file")
+        Log.d("Se escribió en: ", "File written to $file ACA ESTA LA STRING $email")
     }
 
 
