@@ -5,8 +5,11 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Environment
 import android.util.Log
+import android.widget.Toast
+import androidx.fragment.app.FragmentActivity
 import kotlinx.android.synthetic.main.activity_main.*
-import java.io.File
+import java.io.*
+
 
 class MainActivity : AppCompatActivity() {
 
@@ -14,7 +17,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
+        checkExternalMedia()
         // TODO (1) Obtener acceso a Shared Preference
         // TODO (2) Obtener Shared Preference desde la actividad
         // TODO (3) Especificar el nombre del archivo de preferencia (si se esta usando mas de uno)
@@ -65,26 +68,84 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        fun isExternalStorageWritable(): Boolean {
-            return Environment.getExternalStorageState() == Environment.MEDIA_MOUNTED
-        }
-
-        fun getPublicTextStorageDir(textSave: String): File? {
-            // Get the directory for the user's public pictures directory.
-            val file = File(
-                Environment.getExternalStoragePublicDirectory(
-                    Environment.DIRECTORY_DOWNLOADS), textSave)
-            if (!file?.mkdirs()) {
-                Log.e("TAG: ", "Directory not created")
-            }
-            return file
-        }
+//        fun isExternalStorageWritable(): Boolean {
+//            return Environment.getExternalStorageState() == Environment.MEDIA_MOUNTED
+//        }
+//
+//        fun getPublicTextStorageDir(textSave: String): File? {
+//            // Get the directory for the user's public pictures directory.
+//            val file = File(
+//                Environment.getExternalStoragePublicDirectory(
+//                    Environment.DIRECTORY_DOWNLOADS), textSave)
+//            if (!file?.mkdirs()) {
+//                Log.e("TAG: ", "Directory not created")
+//            }
+//            return file
+//        }
 
         bt_write_external.setOnClickListener{
-            if (isExternalStorageWritable()){
-                getPublicTextStorageDir(email)
+            if (Environment.MEDIA_MOUNTED == Environment.getExternalStorageState()){
+                writeToSDFile(email)
             }
         }
     }
+
+     private fun checkExternalMedia() {
+        var mExternalStorageAvailable: Boolean
+        var mExternalStorageWriteable: Boolean
+        val state = Environment.getExternalStorageState()
+
+        if (Environment.MEDIA_MOUNTED == state) {
+         // Can read and write the media
+            mExternalStorageWriteable = true
+            mExternalStorageAvailable = mExternalStorageWriteable
+        }
+        else if (Environment.MEDIA_MOUNTED_READ_ONLY == state) {
+         // Can only read the media
+            mExternalStorageAvailable = true
+            mExternalStorageWriteable = false
+        }
+        else {
+         // Can't read or write
+            mExternalStorageWriteable = false
+            mExternalStorageAvailable = mExternalStorageWriteable
+        }
+        Toast.makeText(this, "\n\nExternal Media: readable=" + mExternalStorageAvailable + " writable=" + mExternalStorageWriteable,
+        Toast.LENGTH_LONG)
+         Log.d("A VER", "\n\nExternal Media: readable=" + mExternalStorageAvailable + " writable=" + mExternalStorageWriteable)
+     }
+
+
+    private fun writeToSDFile(email: String) {
+
+        // Find the root of the external storage.
+        // See http://developer.android.com/guide/topics/data/data-  storage.html#filesExternal
+
+        val root = android.os.Environment.getExternalStorageDirectory()
+        Log.d("ROOT","\nExternal file system root: $root")
+
+        val dir = File(root.absolutePath + "/Download")
+        dir.mkdirs()
+        val file = File(dir, "myData.txt")
+
+        try {
+            val f = FileOutputStream(file)
+            val pw = PrintWriter(f)
+            pw.println(email)
+            pw.flush()
+            pw.close()
+            f.close()
+        } catch (e: FileNotFoundException) {
+            e.printStackTrace()
+            Log.i("NO SE ENCUENTRA: ",
+                "******* File not found. Did you" + " add a WRITE_EXTERNAL_STORAGE permission to the   manifest?"
+            )
+        } catch (e: IOException) {
+            e.printStackTrace()
+        }
+
+        Log.d("Se escribió en: ", "File written to $file")
+    }
+
 
 }
